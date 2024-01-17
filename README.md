@@ -1,4 +1,4 @@
-# Linear-Regression-PostgreSQL
+# Linear Regression
 
 SQL Project Idea: 
 
