@@ -25,7 +25,7 @@ $$;
 
 select * from initial('width', 'length1');
 
-create or replace function linereg(dml text, edr text)
+create or replace function linereg(x_pre text, y_pre text)
 	returns table(
 			a numeric,
 			b numeric,
@@ -51,13 +51,13 @@ begin
 							cast(predictor as numeric) as x,
 							cast(predictant as numeric) as y
 						from 
-							initial(dml, edr)) as values ) as totals 
+							initial(x_pre, y_pre)) as values ) as totals 
 							;
 end;$$
 
 select * from linereg('width','length1')
 
-create or replace function outputs (ac numeric, b numeric, Ro numeric, dml text, edr text)
+create or replace function outputs (x_pre text, y_pre text)
 	returns table(
 			x_ini numeric,
 			y_ini numeric,
@@ -69,23 +69,25 @@ begin
 			select 
 				x, 
 				y, 
-				(ac + b * x)
+				((select
+				 	a
+				 from
+				 	linereg(x_pre, y_pre)) + (select
+									b
+								  from
+									linereg(x_pre,y_pre)) * x)
 			from(
 				select
 					cast(predictor as numeric) as x,
 					cast(predictant as numeric) as y
 				from 
-					initial(dml, edr)) as values
+					initial(x_pre, y_pre)) as values
 				;
 end;$$
 
-select * from outputs((select a from linereg('width', 'length1')), 
-					  (select b from linereg('width', 'length1')), 
-					  (select Ro from linereg('width', 'length1')),
-					  'width',
-					  'length1')
+select * from outputs('width','length1')
 
-create or replace function lireg_statistics()
+create or replace function lireg_statistics(x_pre text, y_pre text)
 	returns table(
 				Multiple_R numeric,
 				R_square numeric,
@@ -118,14 +120,10 @@ begin return query
 						y_est,
 						avg(y_ini) over() as avgyini
 					from 
-						outputs((select a from linereg('width', 'length1')), 
-								(select b from linereg('width', 'length1')), 
-								(select Ro from linereg('width', 'length1')),
-							   	'width',
-							   	'length1')
+						outputs(x_pre, y_pre)
 					) as initial_values	
 			) as initial_totals
 		;
 end $$;
 
-select * from lireg_statistics()
+select * from lireg_statistics('width','length1')
