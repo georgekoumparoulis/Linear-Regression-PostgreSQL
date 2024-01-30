@@ -35,24 +35,24 @@ as $$
 begin
 	return query
 			select
-					round((((Sy * Sxx) - (Sx * Sxy)) / ((N * Sxx)-(Sx * Sx))),2) as Alpha,
-					round((((N * Sxy) - (Sx * Sy)) / ((N * Sxx) -(Sx * Sx))),2) as Beta,
-					round((((N * Sxy) - (Sx * Sy)) / sqrt(((N * Sxx) - (Sx * Sx)) * ((N * Syy) - (Sy * Sy)))),2) as Ro
+				round((((Sy * Sxx) - (Sx * Sxy)) / ((N * Sxx)-(Sx * Sx))),2) as Alpha,
+				round((((N * Sxy) - (Sx * Sy)) / ((N * Sxx) -(Sx * Sx))),2) as Beta,
+				round((((N * Sxy) - (Sx * Sy)) / sqrt(((N * Sxx) - (Sx * Sx)) * ((N * Syy) - (Sy * Sy)))),2) as Ro
+			from
+				(select 
+					sum(x) as Sx,
+					sum(y) as Sy,
+					sum(x * x) as Sxx,
+					sum(x * y) as Sxy,
+					sum(y * y) as Syy,
+					count(*) as N
 				from
 					(select 
-						sum(x) as Sx,
-						sum(y) as Sy,
-						sum(x * x) as Sxx,
-						sum(x * y) as Sxy,
-						sum(y * y) as Syy,
-						count(*) as N
-					from
-						(select 
-							cast(predictor as numeric) as x,
-							cast(predictant as numeric) as y
-						from 
-							initial(x_pre, y_pre)) as values ) as totals 
-							;
+						cast(predictor as numeric) as x,
+						cast(predictant as numeric) as y
+					from 
+						initial(x_pre, y_pre)) as values ) as totals 
+						;
 end;$$
 
 select * from linereg('width','length1')
@@ -105,24 +105,24 @@ begin return query
 			cast(n as numeric)
 		from(
 			select
-					sum(x_ini) as Sx,
-					sum(y_ini) as Sy,
-					sum(x_ini * x_ini) as Sxx,
-					sum(x_ini * y_ini) as Sxy,
-					sum(y_ini * y_ini) as Syy,
-					sum(power((y_ini - y_est),2)) as Syiye2,
-					sum(power((y_ini - (avgyini)),2)) as Syiya2,
-					count(*) as n
-				from(
-					select 
-						x_ini,
-						y_ini,
-						y_est,
-						avg(y_ini) over() as avgyini
-					from 
-						outputs(x_pre, y_pre)
-					) as initial_values	
-			) as initial_totals
+				sum(x_ini) as Sx,
+				sum(y_ini) as Sy,
+				sum(x_ini * x_ini) as Sxx,
+				sum(x_ini * y_ini) as Sxy,
+				sum(y_ini * y_ini) as Syy,
+				sum(power((y_ini - y_est),2)) as Syiye2,
+				sum(power((y_ini - (avgyini)),2)) as Syiya2,
+				count(*) as n
+			from(
+				select 
+					x_ini,
+					y_ini,
+					y_est,
+					avg(y_ini) over() as avgyini
+				from 
+					outputs(x_pre, y_pre)
+				) as initial_values	
+		) as initial_totals
 		;
 end $$;
 
